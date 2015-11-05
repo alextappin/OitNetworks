@@ -2,6 +2,9 @@ var net = require('net');
 var put = require('put');
 var ip = require('ip');
 
+
+var buf1 = new Buffer(2);
+var requestString;
 var serverInfo = {
     serviceIp : '192.168.101.210',
     servicePort : 2605
@@ -21,7 +24,7 @@ var requestObject = {
     clientSocketNo  : 0,
     foreignHostIPAddress    : '',
     foreignHostServicePort  : 0,
-    studentData : 'First',
+    studentData : '',
     scenarioNo  : 0,
     totalLength : 0,
     valueInTCPHeader    : 0
@@ -29,8 +32,8 @@ var requestObject = {
 var unique = 1;
 
 var writeRequest = function(cli) {
-    requestObject.msTimeStamp = Date.now();
-    requestObject.requestID += unique;
+    requestObject.msTimeStamp = Math.ceil(Date.now() / 1000);
+    requestObject.requestID = unique++;
     requestObject.clientServicePort = cli.address().port;
     requestObject.foreignHostIPAddress = serverInfo.serviceIp;
     requestObject.foreignHostServicePort = serverInfo.servicePort;
@@ -67,9 +70,11 @@ var recieveCount = 0;
 var client = new net.Socket();
 client.connect(serverInfo.servicePort, serverInfo.serviceIp, function() {
     console.log('Connected');
-    var buf1 = new Buffer(2);
-    var requestString = writeRequest(client);
+    requestString = writeRequest(client);
     buf1.writeInt16BE(requestString.length);
+    console.log(buf1);
+    console.log(requestString);
+    console.log(requestString.length);
     client.write(buf1);
     client.write(requestString);
 });
@@ -81,17 +86,19 @@ client.on('data', function(data) {
     console.log(data.toString());
     console.log("there was data");
     if (counter < 100) {
-        var buf1 = new Buffer(2);
-        var requestString = writeRequest(client);
+        console.log(counter);
+        requestString = writeRequest(client);
         buf1.writeInt16BE(requestString.length);
         client.write(buf1);
         client.write(requestString);
     }
     else {
+        console.log('ending');
         client.end();
     }
 });
 
 client.on('close', function() {
     console.log('Connection closed');
+    client.destroy();
 });
