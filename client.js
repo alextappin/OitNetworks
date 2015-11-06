@@ -10,6 +10,8 @@ var serverInfo = {
     servicePort : 2605
 };
 var counter = 0;
+var endStatus;
+var closeStatus;
 var requestObject = {
     tcpHeader   : 0,
     messageType : 'REQ',
@@ -24,8 +26,8 @@ var requestObject = {
     clientSocketNo  : 0,
     foreignHostIPAddress    : '',
     foreignHostServicePort  : 0,
-    studentData : '',
-    scenarioNo  : 0,
+    studentData : 'Data',
+    scenarioNo  : 1,
     totalLength : 0,
     valueInTCPHeader    : 0
 };
@@ -61,9 +63,11 @@ var writeTrailerRecord = function() {
         h = today.getHours() < 10 ? '0' + today.getHours() : today.getHours(),
         m = today.getMinutes() < 10 ? '0' + today.getMinutes() : today.getMinutes(),
         s = today.getSeconds() < 10 ? '0' + today.getSeconds() : today.getSeconds(),
+        endStatus = !endStatus ? 0 : endStatus,
+        closeStatus = !closeStatus ? 0 : closeStatus,
         trailer;
 
-    trailer =  mm + dd + yyyy + '|' + h + m + s + '|' + '?????' + '|' + '?????' + '|' + '?????';
+    trailer =  mm + dd + yyyy + '|' + h + m + s + '|' + endStatus + '|' + endStatus + '|' + closeStatus;
     writeToLog(trailer);
 };
 
@@ -103,7 +107,7 @@ client.connect(serverInfo.servicePort, serverInfo.serviceIp, function() {
 
 client.on('data', function(data) {
     counter++;
-    writeToLog(data.toString());
+    writeToLog(data.toString().slice(2).trim()+requestObject.scenarioNo+requestObject.fieldSeparator);
     //console.log("there was data");
     //console.log(data.toString());
     var date = Date.now();
@@ -122,12 +126,12 @@ client.on('data', function(data) {
     else {
         //console.log('half-shutdown');
         //console.timeEnd('firstTimer');
-        writeTrailerRecord();
-        client.end();
+        endStatus = client.end();
     }
 });
 
 client.on('close', function() {
-    console.log('Connection closed, destroying socket');
-    client.destroy();
+    //console.log('Connection closed, destroying socket');
+    closeStatus = client.destroy();
+    writeTrailerRecord();
 });
