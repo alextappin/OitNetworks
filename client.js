@@ -18,7 +18,7 @@ var requestObject = {
     fieldSeparator :'|',
     msTimeStamp : 0,
     requestID : '',
-    studentName : 'AlexanderTappin',
+    studentName : 'TappinA',
     studentID   : '220-361',
     responseDelay   : 0,
     clientIPAddress : ip.address(),
