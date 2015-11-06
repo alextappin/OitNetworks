@@ -49,8 +49,7 @@ var writeRequest = function(cli, delay) {
         requestObject.clientServicePort + requestObject.fieldSeparator + requestObject.clientSocketNo +
         requestObject.fieldSeparator + requestObject.foreignHostIPAddress + requestObject.fieldSeparator +
         requestObject.foreignHostServicePort + requestObject.fieldSeparator + requestObject.studentData +
-        requestObject.fieldSeparator + requestObject.scenarioNo + requestObject.fieldSeparator +
-        requestObject.totalLength + requestObject.fieldSeparator + requestObject.valueInTCPHeader;
+        requestObject.fieldSeparator + requestObject.scenarioNo + requestObject.fieldSeparator;
 
     return resp;
 };
