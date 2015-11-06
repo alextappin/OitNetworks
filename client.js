@@ -31,13 +31,14 @@ var requestObject = {
 };
 var unique = 1;
 
-var writeRequest = function(cli) {
+var writeRequest = function(cli, delay) {
     requestObject.msTimeStamp = Math.ceil(Date.now() / 1000);
     requestObject.requestID = unique++;
     requestObject.clientServicePort = cli.address().port;
     requestObject.foreignHostIPAddress = serverInfo.serviceIp;
     requestObject.foreignHostServicePort = serverInfo.servicePort;
     requestObject.scenarioNo = 1;
+    requestObject.responseDelay = delay;
     var resp = requestObject.messageType + requestObject.fieldSeparator +
         requestObject.msTimeStamp + requestObject.fieldSeparator + requestObject.requestID +
         requestObject.fieldSeparator + requestObject.studentName + requestObject.fieldSeparator +
@@ -50,6 +51,25 @@ var writeRequest = function(cli) {
         requestObject.totalLength + requestObject.fieldSeparator + requestObject.valueInTCPHeader;
 
     return resp;
+};
+
+var writeTrailerRecord = function() {
+    var today = new Date(),
+        dd = today.getDate() < 10 ? '0'+today.getDate() : today.getDate(),
+        mm = today.getMonth()+ 1,
+        yyyy = today.getFullYear(),
+        h = today.getHours() < 10 ? '0' + today.getHours() : today.getHours(),
+        m = today.getMinutes() < 10 ? '0' + today.getMinutes() : today.getMinutes(),
+        s = today.getSeconds() < 10 ? '0' + today.getSeconds() : today.getSeconds(),
+        trailer;
+
+    trailer =  mm + dd + yyyy + '|' + h + m + s + '|' + '?????' + '|' + '?????' + '|' + '?????';
+    writeToLog(trailer);
+};
+
+var writeToLog = function writeToLog(text) {
+    var string = text + "\n\r";
+    console.log(string)
 };
 
 var calculateLength = function() {
@@ -69,36 +89,45 @@ var messageCount = 0;
 var recieveCount = 0;
 var client = new net.Socket();
 client.connect(serverInfo.servicePort, serverInfo.serviceIp, function() {
-    console.log('Connected');
-    requestString = writeRequest(client);
+    //console.log('Connected');
+    requestString = writeRequest(client, 0);
     buf1.writeInt16BE(requestString.length);
-    console.log(buf1);
-    console.log(requestString);
-    console.log(requestString.length);
+    //console.log(buf1);
+    //console.log(requestString);
+    //console.log(requestString.length);
+    writeToLog(requestString);
+    //console.time('firstTimer');
     client.write(buf1);
     client.write(requestString);
 });
 
 client.on('data', function(data) {
     counter++;
-    console.log('data');
-    console.log(data);
-    console.log(data.toString());
-    console.log("there was data");
+    writeToLog(data.toString());
+    //console.log("there was data");
+    //console.log(data.toString());
+    var date = Date.now();
+    //console.log(date);
     if (counter < 100) {
-        console.log(counter);
-        requestString = writeRequest(client);
+        //console.log(counter);
+        requestString = writeRequest(client, (Date.now()- date));
+        //console.log(requestString);
         buf1.writeInt16BE(requestString.length);
+        writeToLog(requestString);
         client.write(buf1);
         client.write(requestString);
+        //console.log(Date.now());
+        //console.log(Date.now()- date);
     }
     else {
-        console.log('ending');
+        //console.log('half-shutdown');
+        //console.timeEnd('firstTimer');
+        writeTrailerRecord();
         client.end();
     }
 });
 
 client.on('close', function() {
-    console.log('Connection closed');
+    console.log('Connection closed, destroying socket');
     client.destroy();
 });
