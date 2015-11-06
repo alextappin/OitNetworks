@@ -40,7 +40,7 @@ var writeRequest = function(cli, delay) {
     requestObject.foreignHostIPAddress = serverInfo.serviceIp;
     requestObject.foreignHostServicePort = serverInfo.servicePort;
     requestObject.scenarioNo = 1;
-    requestObject.responseDelay = delay;
+    //requestObject.responseDelay = delay;
     var resp = requestObject.messageType + requestObject.fieldSeparator +
         requestObject.msTimeStamp + requestObject.fieldSeparator + requestObject.requestID +
         requestObject.fieldSeparator + requestObject.studentName + requestObject.fieldSeparator +
