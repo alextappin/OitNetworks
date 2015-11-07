@@ -1,14 +1,17 @@
 var net = require('net');
 var put = require('put');
 var ip = require('ip');
-
-
+var async = require('async');
+var stringToLog ='';
 var buf1 = new Buffer(2);
 var requestString;
 var serverInfo = {
     serviceIp : '192.168.101.210',
     servicePort : 2605
 };
+var extraData;
+var count = 0;
+var messageCounter = 100;
 var counter = 0;
 var endStatus;
 var closeStatus;
@@ -27,7 +30,7 @@ var requestObject = {
     foreignHostIPAddress    : '',
     foreignHostServicePort  : 0,
     studentData : 'Data',
-    scenarioNo  : 1,
+    scenarioNo  : 2,
     totalLength : 0,
     valueInTCPHeader    : 0
 };
@@ -39,8 +42,7 @@ var writeRequest = function(cli, delay) {
     requestObject.clientServicePort = cli.address().port;
     requestObject.foreignHostIPAddress = serverInfo.serviceIp;
     requestObject.foreignHostServicePort = serverInfo.servicePort;
-    requestObject.scenarioNo = 1;
-    //requestObject.responseDelay = delay;
+    requestObject.responseDelay = delay;
     var resp = requestObject.messageType + requestObject.fieldSeparator +
         requestObject.msTimeStamp + requestObject.fieldSeparator + requestObject.requestID +
         requestObject.fieldSeparator + requestObject.studentName + requestObject.fieldSeparator +
@@ -72,7 +74,8 @@ var writeTrailerRecord = function() {
 
 var writeToLog = function writeToLog(text) {
     var string = text + "\n\r";
-    console.log(string)
+    //console.log(string)
+    stringToLog+=string;
 };
 
 var calculateLength = function() {
@@ -91,46 +94,77 @@ var convertLengthToBinary = function convertLengthToBinary(len) {
 var messageCount = 0;
 var recieveCount = 0;
 var client = new net.Socket();
+var clientTransmit = function clientTransmit(cli, text) {
+    cli.write(text);
+};
+var recieveMessage = function clientRecieve(cli, text) {
+
+};
+
 client.connect(serverInfo.servicePort, serverInfo.serviceIp, function() {
     //console.log('Connected');
-    requestString = writeRequest(client, 0);
-    buf1.writeInt16BE(requestString.length);
-    //console.log(buf1);
-    //console.log(requestString);
-    //console.log(requestString.length);
-    writeToLog(requestString);
-    //console.time('firstTimer');
-    client.write(buf1);
-    client.write(requestString);
+});
+
+client.on('connect', function(data){
+    var date;
+
+    async.whilst(
+        function () { return count < messageCounter; },
+        function (callback) {
+            count++;
+            date = Date.now();
+            requestString = writeRequest(client, count % 2 !== 0? count-1: count+1);
+            buf1.writeInt16BE(requestString.length);
+            writeToLog(requestString);
+            clientTransmit(client, buf1);
+            clientTransmit(client, requestString);
+            setTimeout(callback, 10);
+        },
+        function (err) {
+
+        }
+    );
 });
 
 client.on('data', function(data) {
-    counter++;
-    writeToLog(data.toString().slice(2).trim()+requestObject.scenarioNo+requestObject.fieldSeparator);
-    //console.log("there was data");
-    //console.log(data.toString());
-    var date = Date.now();
-    //console.log(date);
-    if (counter < 100) {
-        //console.log(counter);
-        requestString = writeRequest(client, (Date.now()- date));
-        //console.log(requestString);
-        buf1.writeInt16BE(requestString.length);
-        writeToLog(requestString);
-        client.write(buf1);
-        client.write(requestString);
-        //console.log(Date.now());
-        //console.log(Date.now()- date);
+    var numOfMessages = data.toString().match(/RSP/g).length;
+    //console.log('fffffffff',data.toString() + '\n' + data.length+ '\n');
+    var tempData;
+    var messLength;
+    var flag = true;
+    data = extraData ? extraData + data : data;
+    for (var x = 0; x < numOfMessages; x++) {
+        counter++;
+        messLength = data[1];
+        //console.log(messLength);
+        //console.log(data.length);
+        if (data.length >= messLength-1) {
+            //console.log('BufBefore' + data.length +  '\n' + data);
+            tempData = data.slice(2,messLength+1);
+            //console.log(messLength);
+            //console.log(messLength-2);
+            data = data.slice(messLength+2);
+            //console.log('\nBuffAfter' + data.length +  '\n' + data);
+            //console.log(tempData.toString());
+            writeToLog((tempData.toString()) + requestObject.scenarioNo + requestObject.fieldSeparator);
+            extraData = false;
+        }
+        else {
+            counter--;
+            extraData = data;
+        }
     }
-    else {
-        //console.log('half-shutdown');
-        //console.timeEnd('firstTimer');
-        endStatus = client.end();
-    }
+    endSocket();
 });
 
 client.on('close', function() {
-    //console.log('Connection closed, destroying socket');
     closeStatus = client.destroy();
     writeTrailerRecord();
+    console.log(stringToLog);
 });
+
+var endSocket = function(){
+    if (counter >= messageCounter && count >= messageCounter) {
+        endStatus = client.end();
+    }
+};
