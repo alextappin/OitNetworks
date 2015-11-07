@@ -9,6 +9,12 @@ var serverInfo = {
     serviceIp : '192.168.101.210',
     servicePort : 2605
 };
+var latentObj = {
+    delayed: [
+    ],
+    recovered: [
+    ]
+};
 var extraData;
 var count = 0;
 var messageCounter = 100;
@@ -30,7 +36,7 @@ var requestObject = {
     foreignHostIPAddress    : '',
     foreignHostServicePort  : 0,
     studentData : 'Data',
-    scenarioNo  : 2,
+    scenarioNo  : 3,
     totalLength : 0,
     valueInTCPHeader    : 0
 };
@@ -111,11 +117,22 @@ client.on('connect', function(data){
     async.whilst(
         function () { return count < messageCounter; },
         function (callback) {
+            var matcher;
+            var delayed;
             count++;
             date = Date.now();
-            requestString = writeRequest(client, count % 2 !== 0? count-1: count+1);
+            requestString = writeRequest(client, count % 2 !== 0? 4000: 0);
             buf1.writeInt16BE(requestString.length);
             writeToLog(requestString);
+            matcher = requestString.match(/\d+\|T/g);
+            matcher = matcher.toString().slice(0, matcher.length-3);
+            if (count % 2 !== 0) {
+                var tempObj = {
+                    time: date,
+                    number: matcher
+                };
+                latentObj.delayed.push(tempObj);
+            }
             clientTransmit(client, buf1);
             clientTransmit(client, requestString);
             setTimeout(callback, 10);
@@ -132,6 +149,8 @@ client.on('data', function(data) {
     var tempData;
     var messLength;
     var flag = true;
+    console.log(latentObj.delayed[1].time);
+    console.log(Date.now());
     data = extraData ? extraData + data : data;
     for (var x = 0; x < numOfMessages; x++) {
         counter++;
