@@ -49,9 +49,25 @@ console.log("Chat server running at port 5000\n");*/
 
 var net = require('net');
 
-var server = net.createServer(function(socket) {
-    socket.write('Echo server\r\n');
-    socket.pipe(socket);
-});
+var messLength;
+var tempData;
+var stringToLog;
 
-server.listen(2605, '192.168.101.210');
+var writeToLog = function writeToLog(text) {
+    var string = text + "\n\r";
+    //console.log(string)
+    stringToLog+=string;
+    console.log(string);
+};
+
+var server = net.createServer(function(socket) {
+    socket.write('Connect');
+    socket.on('data', function (data) {
+        //tempData = data.slice(2,messLength+1);
+        console.log(data.toString());
+        //console.log(messLength-2);
+        //data = data.slice(messLength+2);
+        //writeToLog((tempData.toString()) + '2' + '|');
+        socket.write(data);
+    });
+}).listen(2605, '10.220.10.222');

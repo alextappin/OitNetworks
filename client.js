@@ -5,9 +5,11 @@ var async = require('async');
 var stringToLog ='';
 var buf1 = new Buffer(2);
 var requestString;
+//10.220.9.27 eric
+//10.220.10.222 mine
 var serverInfo = {
-    serviceIp : '192.168.101.210',
-    servicePort : 2605
+    serviceIp : '10.220.9.27',
+    servicePort : 6832
 };
 var latentObj = {
     delayed: [
@@ -17,7 +19,7 @@ var latentObj = {
 };
 var extraData;
 var count = 0;
-var messageCounter = 100;
+var messageCounter = 10000;
 var counter = 0;
 var endStatus;
 var closeStatus;
@@ -36,7 +38,7 @@ var requestObject = {
     foreignHostIPAddress    : '',
     foreignHostServicePort  : 0,
     studentData : 'Data',
-    scenarioNo  : 3,
+    scenarioNo  : 2,
     totalLength : 0,
     valueInTCPHeader    : 0
 };
@@ -48,7 +50,7 @@ var writeRequest = function(cli, delay) {
     requestObject.clientServicePort = cli.address().port;
     requestObject.foreignHostIPAddress = serverInfo.serviceIp;
     requestObject.foreignHostServicePort = serverInfo.servicePort;
-    requestObject.responseDelay = delay;
+    requestObject.responseDelay = 0;
     var resp = requestObject.messageType + requestObject.fieldSeparator +
         requestObject.msTimeStamp + requestObject.fieldSeparator + requestObject.requestID +
         requestObject.fieldSeparator + requestObject.studentName + requestObject.fieldSeparator +
@@ -135,22 +137,22 @@ client.on('connect', function(data){
             }
             clientTransmit(client, buf1);
             clientTransmit(client, requestString);
-            setTimeout(callback, 10);
+            setTimeout(callback, 2);
         },
         function (err) {
-
+            console.log(stringToLog);
         }
     );
 });
 
 client.on('data', function(data) {
-    var numOfMessages = data.toString().match(/RSP/g).length;
+    var numOfMessages = data.toString().match(/RSP/g) ? data.toString().match(/RSP/g).length : 0;
     //console.log('fffffffff',data.toString() + '\n' + data.length+ '\n');
     var tempData;
     var messLength;
     var flag = true;
-    console.log(latentObj.delayed[1].time);
-    console.log(Date.now());
+    /*console.log(latentObj.delayed[1].time);*/
+    /*console.log(Date.now());*/
     data = extraData ? extraData + data : data;
     for (var x = 0; x < numOfMessages; x++) {
         counter++;
