@@ -29,15 +29,15 @@ var requestObject = {
     fieldSeparator :'|',
     msTimeStamp : 0,
     requestID : '',
-    studentName : 'TappinA',
-    studentID   : '220-361',
+    studentName : 'MagersE',
+    studentID   : '363-321',
     responseDelay   : 0,
     clientIPAddress : ip.address(),
     clientServicePort   : 0,
     clientSocketNo  : 0,
     foreignHostIPAddress    : '',
     foreignHostServicePort  : 0,
-    studentData : 'Data',
+    studentData : 'success',
     scenarioNo  : 2,
     totalLength : 0,
     valueInTCPHeader    : 0
@@ -127,7 +127,7 @@ client.on('connect', function(data){
             requestString = writeRequest(client, count % 2 !== 0? 4000: 0);
             buf1.writeInt16BE(requestString.length);
             writeToLog(requestString);
-            matcher = requestString.match(/\d+\|T/g);
+            matcher = requestString.match(/\d+\|M/g);
             matcher = matcher.toString().slice(0, matcher.length-3);
             if (count % 2 !== 0) {
                 var tempObj = {
