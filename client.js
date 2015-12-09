@@ -8,7 +8,7 @@ var requestString;
 //10.220.9.27 eric
 //10.220.10.222 mine
 var serverInfo = {
-    serviceIp : '10.220.9.27',
+    serviceIp : '24.21.165.110',
     servicePort : 6832
 };
 var latentObj = {
@@ -84,6 +84,7 @@ var writeToLog = function writeToLog(text) {
     var string = text + "\n\r";
     //console.log(string)
     stringToLog+=string;
+    console.log(string);
 };
 
 var calculateLength = function() {
@@ -135,12 +136,12 @@ client.on('connect', function(data){
                 };
                 latentObj.delayed.push(tempObj);
             }
-            clientTransmit(client, buf1);
-            clientTransmit(client, requestString);
-            setTimeout(callback, 2);
+            /*clientTransmit(client, buf1);*/
+            clientTransmit(client, buf1 + requestString);
+            setTimeout(callback, 12);
         },
         function (err) {
-            console.log(stringToLog);
+            //console.log(stringToLog);
         }
     );
 });
@@ -179,13 +180,16 @@ client.on('data', function(data) {
 });
 
 client.on('close', function() {
+    console.log('I got closed with ', counter, ' messages');
     closeStatus = client.destroy();
     writeTrailerRecord();
-    console.log(stringToLog);
+    //console.log(stringToLog);
 });
 
 var endSocket = function(){
     if (counter >= messageCounter && count >= messageCounter) {
+        console.log("MESSAGES", counter);
         endStatus = client.end();
+        console.log('I shut Down');
     }
 };
