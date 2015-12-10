@@ -56,6 +56,7 @@ var usersConnected = [];
 var numberOfConnections = 0;
 var clients = [];
 var extraData;
+var buf1 = new Buffer(2);
 
 var writeToLog = function writeToLog(text) {
     var string = text + "\n\r";
@@ -177,12 +178,13 @@ net.createServer(function (socket) {
             messLength = data[1];
             if (data.length >= messLength-1) {
                 tempData = data.slice(2,messLength+1);
-                newData = data.slice(0,2) + 'RSP' + tempData.toString().slice(3);
+                newData = 'RSP' + tempData.slice(3);
                 data = data.slice(messLength+2);
+                buf1.writeInt16BE(tempData.length);
                 //console.log(newData.toString());
                 writeToLog((tempData.toString()));
-                writeToLog(newData.slice(2));
-                socket.write(newData);
+                writeToLog(newData);
+                socket.write(buf1+newData);
                 extraData = false;
             }
             else {

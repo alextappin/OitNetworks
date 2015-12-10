@@ -19,7 +19,7 @@ var latentObj = {
 };
 var extraData;
 var count = 0;
-var messageCounter = 5000;
+var messageCounter = 1000;
 var counter = 0;
 var endStatus;
 var closeStatus;
